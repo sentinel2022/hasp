@@ -1,0 +1,12 @@
+body{background:#f8f9fa}
+.card h5{margin-bottom:0.75rem}
+td[contenteditable="true"]{min-width:120px}
+.card{border-radius:12px}
+.card .card-body{padding:1rem}
+table thead th{position:sticky;top:0;background:#fff}
+table.table-striped tbody tr:nth-of-type(odd){background: #fff}
+table.table-striped tbody tr:nth-of-type(even){background: #f6f9fc}
+td.match{background: #fff3b0}
+.page-info{font-weight:600}
+.alert-info{background:#eef7ff;border-color:#d0e9ff}
+.loading-overlay{position:fixed;inset:0;z-index:2000;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.15)}
