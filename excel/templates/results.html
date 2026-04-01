@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>搜索结果</title>
+    <style>
+        body {
+            font-family: Arial, "Microsoft YaHei", sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        .search-info {
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: #f5f5f5;
+            border-radius: 5px;
+        }
+        .sheet-result {
+            margin-bottom: 30px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+        }
+        .sheet-name {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 8px 15px;
+            background-color: #3498db;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+        .back-link:hover {
+            background-color: #2980b9;
+        }
+        .highlight {
+            background-color: yellow;
+            font-weight: bold;
+        }
+        .filename {
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            display: inline-block;
+        }
+        .no-results {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <h1>搜索结果</h1>
+    
+    <div class="search-info">
+        <p>搜索关键字: <strong>{{ keyword }}</strong></p>
+        <p>文件: <strong class="filename" title="{{ filename }}">{{ filename if filename|length <= 50 else filename[:47] + '...' }}</strong></p>
+    </div>
+    
+    {% if results %}
+        {% for result in results %}
+            <div class="sheet-result">
+                <div class="sheet-name">工作表: {{ result.sheet_name }}</div>
+                <table>
+                    <thead>
+                        <tr>
+                            {% for header in result.headers %}
+                                <th>{{ header }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in result.data %}
+                            <tr>
+                                {% for header in result.headers %}
+                                    <td>
+                                        {% set cell_value = row[header]|string %}
+                                        {% if keyword.lower() in cell_value.lower() %}
+                                            {% set parts = cell_value.split(keyword) %}
+                                            {% for part in parts %}
+                                                {{ part }}
+                                                {% if not loop.last %}
+                                                    <span class="highlight">{{ keyword }}</span>
+                                                {% endif %}
+                                            {% endfor %}
+                                        {% else %}
+                                            {{ cell_value }}
+                                        {% endif %}
+                                    </td>
+                                {% endfor %}
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="no-results">
+            <p>未找到匹配的结果。</p>
+        </div>
+    {% endif %}
+    
+    <a href="{{ url_for('index') }}" class="back-link">返回搜索页面</a>
+</body>
+</html>

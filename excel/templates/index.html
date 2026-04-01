@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excel 关键字查询</title>
+    <style>
+        body {
+            font-family: Arial, "Microsoft YaHei", sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"], select {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+            font-family: inherit;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            cursor: pointer;
+            font-family: inherit;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .flash-message {
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            background-color: #f8f8f8;
+        }
+        .error {
+            color: red;
+            border-left: 4px solid red;
+        }
+        .success {
+            color: green;
+            border-left: 4px solid green;
+        }
+        .filename {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 300px;
+            display: inline-block;
+        }
+        select {
+            font-family: inherit;
+        }
+        option {
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .file-option {
+            margin-bottom: 10px;
+        }
+        .file-option label {
+            display: inline;
+            font-weight: normal;
+            margin-left: 5px;
+        }
+        .file-section {
+            margin-top: 10px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Excel 关键字查询</h1>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="flash-message {{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    
+    <form method="post" enctype="multipart/form-data" accept-charset="UTF-8">
+        <div class="form-group">
+            <label for="keyword">搜索关键字:</label>
+            <input type="text" id="keyword" name="keyword" required value="{{ request.form.get('keyword', '') }}">
+        </div>
+        
+        <div class="form-group">
+            <label>选择文件方式:</label>
+            
+            <div class="file-option">
+                <input type="radio" id="existing_file" name="file_option" value="existing" checked>
+                <label for="existing_file">从已上传文件中选择</label>
+            </div>
+            
+            <div class="file-option">
+                <input type="radio" id="new_file" name="file_option" value="new">
+                <label for="new_file">上传新文件</label>
+            </div>
+            
+            <div class="file-section" id="existing-file-section">
+                <label for="selected_file">选择文件:</label>
+                <select name="selected_file" id="selected_file">
+                    <option value="">-- 请选择文件 --</option>
+                    {% for file in uploaded_files %}
+                        {% set display_name = file if file|length <= 50 else file[:47] + '...' %}
+                        <option value="{{ file }}" {% if file == selected_file %}selected{% endif %} title="{{ file }}">
+                            {{ display_name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="file-section" id="new-file-section" style="display: none;">
+                <label for="file">上传新文件:</label>
+                <input type="file" name="file" id="file" accept=".xlsx,.xls">
+            </div>
+        </div>
+        
+        <button type="submit">搜索</button>
+    </form>
+    
+    <script>
+        // 文件选项切换
+        document.getElementById('existing_file').addEventListener('change', function() {
+            if (this.checked) {
+                document.getElementById('existing-file-section').style.display = 'block';
+                document.getElementById('new-file-section').style.display = 'none';
+            }
+        });
+        
+        document.getElementById('new_file').addEventListener('change', function() {
+            if (this.checked) {
+                document.getElementById('existing-file-section').style.display = 'none';
+                document.getElementById('new-file-section').style.display = 'block';
+            }
+        });
+        
+        // 初始化状态
+        document.getElementById('existing_file').checked = true;
+        document.getElementById('existing-file-section').style.display = 'block';
+        document.getElementById('new-file-section').style.display = 'none';
+    </script>
+</body>
+</html>

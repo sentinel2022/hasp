@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>Excel 关键字查询</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Excel 关键字查询</h1>
+        <form method="post" action="/search" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="file">选择 Excel 文件:</label>
+                <input type="file" id="file" name="file" accept=".xlsx, .xls" required>
+            </div>
+            <div class="form-group">
+                <label for="keyword">输入查询关键字:</label>
+                <input type="text" id="keyword" name="keyword" placeholder="请输入要查找的内容..." required>
+            </div>
+            <button type="submit" class="btn">开始查询</button>
+        </form>
+        
+        {% if message %}
+        <div class="message">{{ message }}</div>
+        {% endif %}
+    </div>
+</body>
+</html>

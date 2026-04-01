@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excel 关键字查询</title>
+    <style>
+        body {
+            font-family: Arial, "Microsoft YaHei", sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"], select {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+            font-family: inherit;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .flash-message {
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            background-color: #f8f8f8;
+        }
+        .error {
+            color: red;
+        }
+        .success {
+            color: green;
+        }
+        .filename {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 300px;
+            display: inline-block;
+        }
+        select {
+            font-family: inherit;
+        }
+        option {
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+    </style>
+</head>
+<body>
+    <h1>Excel 关键字查询</h1>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="flash-message {{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    
+    <form method="post" enctype="multipart/form-data" accept-charset="UTF-8">
+        <div class="form-group">
+            <label for="keyword">搜索关键字:</label>
+            <input type="text" id="keyword" name="keyword" required value="{{ request.form.get('keyword', '') }}">
+        </div>
+        
+        <div class="form-group">
+            <label>选择文件:</label>
+            <div>
+                <input type="radio" id="existing_file" name="file_option" value="existing" checked>
+                <label for="existing_file" style="display: inline;">从已上传文件中选择</label>
+            </div>
+            <select name="selected_file" id="selected_file">
+                {% for file in uploaded_files %}
+                    {% set display_name = file if file|length <= 50 else file[:47] + '...' %}
+                    <option value="{{ file }}" {% if file == selected_file %}selected{% endif %} title="{{ file }}">
+                        {{ display_name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <div>
+                <input type="radio" id="new_file" name="file_option" value="new">
+                <label for="new_file" style="display: inline;">上传新文件</label>
+            </div>
+            <input type="file" name="file" id="file" accept=".xlsx,.xls">
+        </div>
+        
+        <button type="submit">搜索</button>
+    </form>
+    
+    <script>
+        document.getElementById('new_file').addEventListener('change', function() {
+            if (this.checked) {
+                document.getElementById('selected_file').disabled = true;
+                document.getElementById('file').disabled = false;
+            }
+        });
+        
+        document.getElementById('existing_file').addEventListener('change', function() {
+            if (this.checked) {
+                document.getElementById('selected_file').disabled = false;
+                document.getElementById('file').disabled = true;
+            }
+        });
+        
+        // 初始化状态
+        document.getElementById('selected_file').disabled = false;
+        document.getElementById('file').disabled = true;
+    </script>
+</body>
+</html>
