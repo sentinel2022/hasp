@@ -1,3 +1,4 @@
+#在LDK加密锁内存信息中的XML文件，提取信息
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import org.w3c.dom.Document;
