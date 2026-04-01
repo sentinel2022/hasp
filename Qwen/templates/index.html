@@ -1,0 +1,660 @@
+<!-- templates/index.html (完整修复版) -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excel文件管理器</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+        }
+        .card {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+            margin-bottom: 1.5rem;
+        }
+        .card:hover {
+            transform: translateY(-2px);
+        }
+        .result-item {
+            border-left: 4px solid #667eea;
+            margin-bottom: 1rem;
+            background-color: #f8f9fa;
+        }
+        .editable-cell {
+            cursor: pointer;
+            padding: 0.5rem;
+            border: 1px dashed transparent;
+            min-width: 100px;
+        }
+        .editable-cell:hover {
+            border-color: #667eea;
+            background-color: #e9ecef;
+        }
+        .btn-action {
+            margin: 0.1rem;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+        .search-result {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        .search-section {
+            display: none;
+        }
+        .file-info {
+            background-color: #e3f2fd;
+            padding: 1rem;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="header text-center">
+        <div class="container">
+            <h1><i class="fas fa-file-excel"></i> Excel文件管理器</h1>
+            <p class="lead">上传Excel文件，搜索、编辑、添加和删除数据</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- 文件上传区域 -->
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-upload"></i> 上传Excel文件</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="uploadForm" enctype="multipart/form-data">
+                            <div class="mb-3">
+                                <input type="file" class="form-control" id="fileInput" accept=".xlsx,.xls" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-cloud-upload-alt"></i> 上传文件
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 已上传文件选择 -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-folder"></i> 已上传的文件</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if uploaded_files %}
+                            <select class="form-select mb-2" id="existingFileSelect">
+                                <option value="">选择已上传的文件...</option>
+                                {% for file in uploaded_files %}
+                                    <option value="{{ file.filename }}">{{ file.filename }}</option>
+                                {% endfor %}
+                            </select>
+                            <button class="btn btn-secondary w-100" onclick="selectExistingFile()">
+                                <i class="fas fa-check"></i> 选择文件
+                            </button>
+                        {% else %}
+                            <p class="text-muted">暂无已上传的文件</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 搜索和操作区域 -->
+        <div id="searchSection" class="search-section">
+            <div class="file-info">
+                <strong>当前文件:</strong> <span id="currentFileName"></span>
+                <button class="btn btn-success btn-sm float-end" onclick="showAddRowModal()">
+                    <i class="fas fa-plus"></i> 添加新记录
+                </button>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-search"></i> 搜索数据</h5>
+                </div>
+                <div class="card-body">
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control" id="searchKeyword" placeholder="输入要搜索的关键字..." autocomplete="off">
+                        <button class="btn btn-success" type="button" onclick="performSearch()">
+                            <i class="fas fa-search"></i> 搜索
+                        </button>
+                    </div>
+                    <small class="text-muted">提示：按回车键也可以执行搜索</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- 加载指示器 -->
+        <div class="loading" id="loadingIndicator">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">加载中...</span>
+            </div>
+            <p class="mt-2">处理中，请稍候...</p>
+        </div>
+
+        <!-- 搜索结果区域 -->
+        <div id="resultsSection" style="display: none;">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5><i class="fas fa-list"></i> 搜索结果</h5>
+                    <span id="resultsCount" class="badge bg-primary"></span>
+                </div>
+                <div class="card-body search-result">
+                    <div id="searchResults"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 模态框：添加新行 -->
+    <div class="modal fade" id="addRowModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">添加新记录</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">选择工作表:</label>
+                        <select class="form-select" id="addRowSheetSelect" onchange="loadAddRowFields()"></select>
+                    </div>
+                    <div id="addRowFields"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" onclick="addNewRow()">添加记录</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <script>
+        let currentFileName = '';
+        let currentSheetInfo = {};
+
+        // 上传文件
+        $('#uploadForm').on('submit', function(e) {
+            e.preventDefault();
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                showAlert('请选择文件', 'warning');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            showLoading();
+            
+            $.ajax({
+                url: '/upload',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    hideLoading();
+                    if (response.success) {
+                        showAlert(response.message, 'success');
+                        currentFileName = response.filename;
+                        $('#currentFileName').text(currentFileName);
+                        $('#searchSection').show();
+                        loadSheetInfo();
+                    } else {
+                        showAlert(response.message, 'danger');
+                    }
+                },
+                error: function() {
+                    hideLoading();
+                    showAlert('上传失败', 'danger');
+                }
+            });
+        });
+
+        // 选择已存在的文件
+        function selectExistingFile() {
+            const select = document.getElementById('existingFileSelect');
+            const selectedFile = select.value;
+            
+            if (selectedFile) {
+                currentFileName = selectedFile;
+                $('#currentFileName').text(currentFileName);
+                $('#searchSection').show();
+                loadSheetInfo();
+                showAlert('已选择文件: ' + selectedFile, 'success');
+            } else {
+                showAlert('请选择一个文件', 'warning');
+            }
+        }
+
+        // 加载工作表信息
+        function loadSheetInfo() {
+            if (!currentFileName) return;
+            
+            showLoading();
+            
+            $.ajax({
+                url: '/get_sheet_info',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    filename: currentFileName
+                }),
+                success: function(response) {
+                    hideLoading();
+                    if (response.success) {
+                        currentSheetInfo = response.sheet_info;
+                    } else {
+                        showAlert(response.message, 'danger');
+                    }
+                },
+                error: function() {
+                    hideLoading();
+                    showAlert('加载工作表信息失败', 'danger');
+                }
+            });
+        }
+
+        // 执行搜索
+        function performSearch() {
+            const keyword = document.getElementById('searchKeyword').value.trim();
+            
+            if (!currentFileName) {
+                showAlert('请先选择或上传文件', 'warning');
+                return;
+            }
+            
+            if (!keyword) {
+                showAlert('请输入搜索关键字', 'warning');
+                return;
+            }
+            
+            showLoading();
+            
+            $.ajax({
+                url: '/search',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    filename: currentFileName,
+                    keyword: keyword
+                }),
+                success: function(response) {
+                    hideLoading();
+                    if (response.success) {
+                        displaySearchResults(response.results, response.total);
+                        $('#resultsSection').show();
+                    } else {
+                        showAlert(response.message, 'danger');
+                        $('#resultsSection').hide();
+                    }
+                },
+                error: function() {
+                    hideLoading();
+                    showAlert('搜索失败', 'danger');
+                    $('#resultsSection').hide();
+                }
+            });
+        }
+
+        // 显示搜索结果
+        function displaySearchResults(results, total) {
+            const resultsContainer = document.getElementById('searchResults');
+            const resultsCount = document.getElementById('resultsCount');
+            
+            resultsCount.textContent = `${total} 条结果`;
+            
+            if (results.length === 0) {
+                resultsContainer.innerHTML = '<p class="text-muted text-center">未找到匹配的结果</p>';
+                return;
+            }
+            
+            let html = '';
+            results.forEach((result, index) => {
+                html += `
+                    <div class="result-item p-3 rounded mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="mb-0">
+                                <i class="fas fa-table"></i> 工作表: ${escapeHtml(result.sheet_name)}
+                                <small class="text-muted">(行 ${result.row_index + 1})</small>
+                            </h6>
+                            <div>
+                                <button class="btn btn-sm btn-danger btn-action" 
+                                        onclick="deleteRow('${result.sheet_name}', ${result.row_index})">
+                                    <i class="fas fa-trash"></i> 删除
+                                </button>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-sm">
+                                <thead class="table-light">
+                                    <tr>
+                                        ${result.columns.map(col => `<th>${escapeHtml(col)}</th>`).join('')}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        ${result.data.map((cell, cellIndex) => 
+                                            `<td class="editable-cell" 
+                                                onclick="editCell(this, '${result.sheet_name}', ${result.row_index}, ${cellIndex})">
+                                                ${escapeHtml(cell || '')}
+                                            </td>`
+                                        ).join('')}
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            resultsContainer.innerHTML = html;
+        }
+
+        // 编辑单元格
+        function editCell(element, sheetName, rowIndex, columnIndex) {
+            const currentValue = element.textContent;
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'form-control form-control-sm';
+            input.value = currentValue;
+            input.style.width = '100%';
+            input.style.minWidth = '100px';
+            
+            input.onblur = function() {
+                const newValue = input.value;
+                if (newValue !== currentValue) {
+                    updateCellValue(sheetName, rowIndex, columnIndex, newValue);
+                }
+                element.textContent = newValue || '';
+            };
+            
+            input.onkeydown = function(e) {
+                if (e.key === 'Enter') {
+                    input.blur();
+                } else if (e.key === 'Escape') {
+                    input.value = currentValue;
+                    input.blur();
+                }
+            };
+            
+            element.innerHTML = '';
+            element.appendChild(input);
+            input.focus();
+        }
+
+        // 更新单元格值
+        function updateCellValue(sheetName, rowIndex, columnIndex, newValue) {
+            showLoading();
+            
+            $.ajax({
+                url: '/update_cell',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    filename: currentFileName,
+                    sheet_name: sheetName,
+                    row_index: rowIndex,
+                    column_index: columnIndex,
+                    new_value: newValue
+                }),
+                success: function(response) {
+                    hideLoading();
+                    if (!response.success) {
+                        showAlert(response.message, 'danger');
+                    }
+                },
+                error: function() {
+                    hideLoading();
+                    showAlert('更新失败', 'danger');
+                }
+            });
+        }
+
+        // 删除行
+        function deleteRow(sheetName, rowIndex) {
+            if (!confirm('确定要删除这条记录吗？此操作不可撤销！')) {
+                return;
+            }
+            
+            showLoading();
+            
+            $.ajax({
+                url: '/delete_row',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    filename: currentFileName,
+                    sheet_name: sheetName,
+                    row_index: rowIndex
+                }),
+                success: function(response) {
+                    hideLoading();
+                    if (response.success) {
+                        showAlert('删除成功', 'success');
+                        performSearch(); // 重新搜索刷新结果
+                    } else {
+                        showAlert(response.message, 'danger');
+                    }
+                },
+                error: function() {
+                    hideLoading();
+                    showAlert('删除失败', 'danger');
+                }
+            });
+        }
+
+        // 显示添加新行模态框
+        function showAddRowModal() {
+            if (!currentFileName) {
+                showAlert('请先选择或上传文件', 'warning');
+                return;
+            }
+            
+            // 填充工作表选择
+            const sheetSelect = document.getElementById('addRowSheetSelect');
+            sheetSelect.innerHTML = '';
+            for (const sheetName in currentSheetInfo) {
+                const option = document.createElement('option');
+                option.value = sheetName;
+                option.textContent = sheetName;
+                sheetSelect.appendChild(option);
+            }
+            
+            // 如果有工作表，加载第一个的字段
+            if (Object.keys(currentSheetInfo).length > 0) {
+                loadAddRowFields();
+            }
+            
+            $('#addRowModal').modal('show');
+        }
+
+        // 加载添加行的字段
+        function loadAddRowFields() {
+            const sheetSelect = document.getElementById('addRowSheetSelect');
+            const selectedSheet = sheetSelect.value;
+            const fieldsContainer = document.getElementById('addRowFields');
+            
+            if (!selectedSheet || !currentSheetInfo[selectedSheet]) {
+                fieldsContainer.innerHTML = '<p class="text-muted">请选择工作表</p>';
+                return;
+            }
+            
+            const columns = currentSheetInfo[selectedSheet];
+            let html = '<div class="row">';
+            columns.forEach((column, index) => {
+                html += `
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">${escapeHtml(column)}</label>
+                        <input type="text" class="form-control" 
+                               data-column="${column}" 
+                               placeholder="输入${escapeHtml(column)}">
+                    </div>
+                `;
+            });
+            html += '</div>';
+            
+            fieldsContainer.innerHTML = html;
+        }
+
+        // 添加新行
+        function addNewRow() {
+            const sheetSelect = document.getElementById('addRowSheetSelect');
+            const selectedSheet = sheetSelect.value;
+            
+            if (!selectedSheet) {
+                showAlert('请选择工作表', 'warning');
+                return;
+            }
+            
+            const columns = currentSheetInfo[selectedSheet];
+            const row_data = {};
+            
+            // 获取所有输入值
+            const inputs = document.querySelectorAll('#addRowFields input');
+            let hasData = false;
+            inputs.forEach(input => {
+                const column = input.getAttribute('data-column');
+                const value = input.value.trim();
+                row_data[column] = value;
+                if (value) hasData = true;
+            });
+            
+            if (!hasData) {
+                showAlert('请至少填写一个字段', 'warning');
+                return;
+            }
+            
+            showLoading();
+            
+            $.ajax({
+                url: '/add_row',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    filename: currentFileName,
+                    sheet_name: selectedSheet,
+                    row_data: row_data
+                }),
+                success: function(response) {
+                    hideLoading();
+                    if (response.success) {
+                        showAlert('添加成功', 'success');
+                        $('#addRowModal').modal('hide');
+                        // 清空输入框
+                        document.querySelectorAll('#addRowFields input').forEach(input => input.value = '');
+                        // 如果当前有搜索，重新搜索以显示新添加的记录
+                        if (document.getElementById('searchKeyword').value.trim()) {
+                            performSearch();
+                        }
+                    } else {
+                        showAlert(response.message, 'danger');
+                    }
+                },
+                error: function() {
+                    hideLoading();
+                    showAlert('添加失败', 'danger');
+                }
+            });
+        }
+
+        // 显示提示信息（使用Bootstrap Toast）
+        function showAlert(message, type) {
+            // 创建toast容器
+            let toastContainer = document.getElementById('toastContainer');
+            if (!toastContainer) {
+                toastContainer = document.createElement('div');
+                toastContainer.id = 'toastContainer';
+                toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+                document.body.appendChild(toastContainer);
+            }
+            
+            // 创建toast
+            const toastId = 'toast-' + Date.now();
+            const toastHtml = `
+                <div id="${toastId}" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+                    <div class="toast-header">
+                        <span class="rounded me-2 bg-${type}"></span>
+                        <strong class="me-auto">提示</strong>
+                        <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+                    </div>
+                    <div class="toast-body">
+                        ${message}
+                    </div>
+                </div>
+            `;
+            
+            toastContainer.innerHTML += toastHtml;
+            
+            // 显示toast
+            const toast = new bootstrap.Toast(document.getElementById(toastId));
+            toast.show();
+            
+            // 自动移除toast
+            setTimeout(() => {
+                document.getElementById(toastId).remove();
+            }, 5000);
+        }
+
+        // 显示加载指示器
+        function showLoading() {
+            document.getElementById('loadingIndicator').style.display = 'block';
+        }
+
+        // 隐藏加载指示器
+        function hideLoading() {
+            document.getElementById('loadingIndicator').style.display = 'none';
+        }
+
+        // HTML转义
+        function escapeHtml(text) {
+            if (text === null || text === undefined) return '';
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return String(text).replace(/[&<>"']/g, function(m) { return map[m]; });
+        }
+
+        // 回车键搜索
+        document.getElementById('searchKeyword').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                performSearch();
+            }
+        });
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 如果有已上传的文件，自动选择第一个
+            const existingSelect = document.getElementById('existingFileSelect');
+            if (existingSelect && existingSelect.options.length > 1) {
+                existingSelect.selectedIndex = 1;
+            }
+        });
+    </script>
+</body>
+</html>
