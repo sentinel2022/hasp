@@ -1,0 +1,39 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v6.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v6.0": {
+      "ConsoleApp3/1.0.0": {
+        "dependencies": {
+          "hasp_net_windows": "10.0.42941.60001"
+        },
+        "runtime": {
+          "ConsoleApp3.dll": {}
+        }
+      },
+      "hasp_net_windows/10.0.42941.60001": {
+        "runtime": {
+          "hasp_net_windows.dll": {
+            "assemblyVersion": "10.0.42941.60001",
+            "fileVersion": "10.0.42941.60001"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "ConsoleApp3/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "hasp_net_windows/10.0.42941.60001": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

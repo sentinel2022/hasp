@@ -1,0 +1,5 @@
+E:\Documents\Visual Studio 2022\ConsoleApp3\obj\Debug\netcoreapp3.0\ConsoleApp3.csproj.AssemblyReference.cache
+E:\Documents\Visual Studio 2022\ConsoleApp3\obj\Debug\netcoreapp3.0\ConsoleApp3.GeneratedMSBuildEditorConfig.editorconfig
+E:\Documents\Visual Studio 2022\ConsoleApp3\obj\Debug\netcoreapp3.0\ConsoleApp3.AssemblyInfoInputs.cache
+E:\Documents\Visual Studio 2022\ConsoleApp3\obj\Debug\netcoreapp3.0\ConsoleApp3.AssemblyInfo.cs
+E:\Documents\Visual Studio 2022\ConsoleApp3\obj\Debug\netcoreapp3.0\ConsoleApp3.csproj.CoreCompileInputs.cache

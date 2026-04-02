@@ -1,0 +1,17 @@
+E:\Documents\Visual Studio 2022\ConsoleApp3\bin\Debug\net6.0\ConsoleApp3.exe
+E:\Documents\Visual Studio 2022\ConsoleApp3\bin\Debug\net6.0\ConsoleApp3.deps.json
+E:\Documents\Visual Studio 2022\ConsoleApp3\bin\Debug\net6.0\ConsoleApp3.runtimeconfig.json
+E:\Documents\Visual Studio 2022\ConsoleApp3\bin\Debug\net6.0\ConsoleApp3.dll
+E:\Documents\Visual Studio 2022\ConsoleApp3\bin\Debug\net6.0\ConsoleApp3.pdb
+E:\Documents\Visual Studio 2022\ConsoleApp3\obj\Debug\net6.0\ConsoleApp3.csproj.AssemblyReference.cache
+E:\Documents\Visual Studio 2022\ConsoleApp3\obj\Debug\net6.0\ConsoleApp3.GeneratedMSBuildEditorConfig.editorconfig
+E:\Documents\Visual Studio 2022\ConsoleApp3\obj\Debug\net6.0\ConsoleApp3.AssemblyInfoInputs.cache
+E:\Documents\Visual Studio 2022\ConsoleApp3\obj\Debug\net6.0\ConsoleApp3.AssemblyInfo.cs
+E:\Documents\Visual Studio 2022\ConsoleApp3\obj\Debug\net6.0\ConsoleApp3.csproj.CoreCompileInputs.cache
+E:\Documents\Visual Studio 2022\ConsoleApp3\obj\Debug\net6.0\ConsoleApp3.dll
+E:\Documents\Visual Studio 2022\ConsoleApp3\obj\Debug\net6.0\refint\ConsoleApp3.dll
+E:\Documents\Visual Studio 2022\ConsoleApp3\obj\Debug\net6.0\ConsoleApp3.pdb
+E:\Documents\Visual Studio 2022\ConsoleApp3\obj\Debug\net6.0\ConsoleApp3.genruntimeconfig.cache
+E:\Documents\Visual Studio 2022\ConsoleApp3\obj\Debug\net6.0\ref\ConsoleApp3.dll
+E:\Documents\Visual Studio 2022\ConsoleApp3\bin\Debug\net6.0\hasp_net_windows.dll
+E:\Documents\Visual Studio 2022\ConsoleApp3\obj\Debug\net6.0\ConsoleApp3.csproj.CopyComplete
